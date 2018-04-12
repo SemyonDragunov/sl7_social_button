@@ -42,7 +42,7 @@ Button-links to groups and accounts on social networks.
 * YouTube
 * Twitter
 * Google+
-* Classmates
+* Odnoklassniki
 * Instagram
 * Мой мир@Mail.ru
 * Livejournal
