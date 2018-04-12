@@ -1,0 +1,95 @@
+#sl7-social-button {
+
+  &[data-center=yes] {
+    text-align: center;
+  }
+
+  &[data-style=round] {
+    li {
+      a {
+        -webkit-border-radius: 1000px;
+        -moz-border-radius: 1000px;
+        border-radius: 1000px;
+      }
+    }
+  }
+
+  &[data-style=radius] {
+    li {
+      a {
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+      }
+    }
+  }
+
+  @at-root ul#{&} {
+    width: 100%;
+    padding: 0;
+    display: block;
+    list-style: none outside none;
+    text-align: right;
+
+    &:after {
+      display: block;
+      content: "";
+      clear: both;
+    }
+
+    li { 
+      display: inline-block;
+      margin-right: 10px;
+
+      &:last-child {
+        margin: 0;
+      }
+
+      a {
+        display: block;
+        cursor: pointer;
+        height: 40px;
+        width: 40px;
+        background-image: url('../img/sl7_social_button__white.png'); 
+        background-repeat: no-repeat;
+
+        &.fb {
+          background-position: 0 0;
+        }
+        &.tw {
+          background-position: -40px 0;
+        }
+        &.ok {
+          background-position: -80px 0;
+        }
+        &.vk {
+          background-position: -120px 0;
+        }
+        &.gl {
+          background-position: -160px 0;
+        }
+        &.mm {
+          background-position: -200px 0;
+        }
+        &.lj {
+          background-position: -240px 0;
+        }
+        &.in {
+          background-position: -280px 0;
+        }
+        &.t {
+          background-position: -320px 0;
+        }
+        &.gh {
+          background-position: -360px 0;
+        }
+        &.yt {
+          background-position: -400px 0;
+        }
+        &.lin {
+          background-position: -440px 0;
+        }
+      }
+    }
+  }
+}

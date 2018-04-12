@@ -1,0 +1,370 @@
+<?php
+
+/**
+ * @file
+ * SL7 Social Button module.
+ * 
+ * @author Semyon Dragunov <sam.dragunov@gmail.com>
+ * https://github.com/SemyonDragunov
+ */
+
+define('SL7_SOCIAL_BUTTON_ADMIN_PATH', SL7_CONTROL_PANEL_ADMIN_PATH . '/social/button');
+
+/**
+ * Implement hook_menu().
+ */
+function sl7_social_button_menu() {
+
+  $items[SL7_SOCIAL_BUTTON_ADMIN_PATH] = array(
+    'title' => 'Социальные аккаунты',
+    'description' => 'Настройки ссылок на социальные группы и аккаунты.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sl7_social_button_settings_form'),
+    'access arguments' => array('administer sl7_social_button'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function sl7_social_button_permission() {
+  return array(
+    'administer sl7_social_button' => array(
+      'title' => 'Доступ к настройкам ссылок в социальных сетях.',
+    )
+  );
+}
+
+/**
+ * Implement hook_theme().
+ */
+function sl7_social_button_theme() {
+  $items = array(
+    'sl7_social_button__default' => array(),
+  	'sl7_social_button__white' => array(),
+  );
+
+  foreach ($items as &$item) {
+    if (!isset($item['file'])) {
+      $item['file'] = 'templates/theme.inc';
+    }
+  }
+
+  return $items;
+}
+
+/**
+ * Implements hook_sl7_social_button_theme().
+ */
+function sl7_social_button_sl7_social_button_theme() {
+
+  $themes['sl7_default_square'] = array(
+    'title' => 'Стандартный',
+    'theme' => 'sl7_social_button__default',
+    'settings' => 'sl7_social_button_theme_sl7_default_settings',
+    'img' => drupal_get_path('module', 'sl7_social_button') . '/img/sl7_social_button__preview.png',
+  );
+  
+  $themes['sl7_white'] = array(
+  	'title' => 'Белый',
+  	'theme' => 'sl7_social_button__white',
+  	'settings' => 'sl7_social_button_theme_sl7_white_settings',
+  	'img' => drupal_get_path('module', 'sl7_social_button') . '/img/sl7_social_button__white_preview.png',
+  );
+
+  return $themes;
+}
+
+function sl7_social_button_theme_sl7_default_settings($default_value) {
+
+  $form['style'] = array(
+    '#type' => 'select',
+    '#title' => 'Стиль иконок',
+    '#options' => array(
+      'square' => 'Квадратные',
+      'round' => 'Круглые',
+      'radius' => 'Закруглённые',
+    ),
+    '#default_value' => isset($default_value['style']) ? array($default_value['style']) : array('square'),
+  );
+
+  $form['center'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Расположить по центру?',
+    '#default_value' => isset($default_value['center']) ? $default_value['center'] : 0,
+  );
+
+  return $form;
+}
+
+function sl7_social_button_theme_sl7_white_settings($default_value) {
+	
+	$form['center'] = array(
+		'#type' => 'checkbox',
+		'#title' => 'Расположить по центру?',
+		'#default_value' => isset($default_value['center']) ? $default_value['center'] : 0,
+	);
+	
+	return $form;
+}
+
+/**
+ * Получить информацию о шаблоне.
+ *
+ * @param null $theme
+ *  Ничего или название шаблона.
+ * @return array
+ *  Если аргумента $theme не пуст, вернёться массив с информацией о шаблоне.
+ *  Если аргумент пустой, то массив всех типов шаблонов, где ключ - это
+ *  название шаблона, а значение - массив с информацией о шаблоне.
+ */
+function sl7_social_button_get_theme_info($theme = NULL) {
+  $theme_info = &drupal_static(__FUNCTION__);
+
+  if (!isset($theme_info)) {
+    $theme_info = module_invoke_all('sl7_social_button_theme');
+
+    foreach ($theme_info as $name => $info) {
+      $theme_info[$name] += array(
+        'settings' => FALSE,
+        'js' => FALSE,
+        'css' => FALSE,
+      );
+    }
+  }
+
+  drupal_alter(__FUNCTION__, $theme_info);
+
+  if (array_key_exists($theme, $theme_info)) {
+    return $theme_info[$theme];
+  }
+
+  return $theme_info;
+}
+
+/**
+ * Получить список шаблонов.
+ *
+ * @param null $theme
+ *  Ничего или название шаблона.
+ * @return array
+ *  Если аргумента $theme не пуст, вернёться человекопонятное название.
+ *  Если аргумент пустой, то массив всех типов шаблонов, где ключ - это
+ *  название шаблона, а значение - человекопонятное название.
+ */
+function sl7_social_button_get_theme_name($theme = NULL) {
+  $theme_info = sl7_social_button_get_theme_info();
+  $theme_all = array();
+
+  foreach ($theme_info as $name => $payment) {
+    $theme_all[$name] = $payment['title'];
+  }
+
+  if (array_key_exists($theme, $theme_all)) {
+    return $theme_all[$theme];
+  }
+
+  return $theme_all;
+}
+
+
+/**
+ * Implements hook_block_info().
+ */
+function sl7_social_button_block_info() {
+  $blocks['button'] = array(
+    'info' => 'Социальные кнопки',
+    'status' => 1,
+    'region' => 'footer',
+    'weight' => 10,
+    'cache' => DRUPAL_CACHE_GLOBAL,
+    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function sl7_social_button_block_view($delta = '') {
+  $theme_info = sl7_social_button_get_theme_info(variable_get('sl7_social_button_theme', 'sl7_default_square'));
+  $block = array();
+
+  if ($delta == 'button') {
+    $block['content'] = array(
+      '#markup' => theme($theme_info['theme']),
+    );
+
+    if ($theme_info['css'])
+      $block['content']['#attached']['css'][] = $theme_info['css'];
+
+    if ($theme_info['js'])
+      $block['content']['#attached']['js'][] = $theme_info['js'];
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_contextual_links_view_alter().
+ */
+function sl7_social_button_contextual_links_view_alter(&$element, &$items) {
+  if (isset($element['#element']['#block']) && $element['#element']['#block']->delta == "button") {
+    if (user_access('administer sl7_social_button')) {
+      $element['#links']['social-button'] = array(
+        'title' => 'Настроить кнопки',
+        'href' => url(SL7_SOCIAL_BUTTON_ADMIN_PATH, array('absolute' => TRUE)),
+      );
+    }
+  }
+}
+
+function sl7_social_button_settings_form($form, &$form_state) {
+  $conf = variable_get('sl7_social_button_url');
+  $theme_info = sl7_social_button_get_theme_info(variable_get('sl7_social_button_theme', 'sl7_default_square'));
+
+  $theme = isset($form_state['values']['theme']) ? $form_state['values']['theme'] : '';
+
+  if (!empty($theme)) {
+    $theme_info = sl7_social_button_get_theme_info($theme);
+  }
+
+  $form['#tree'] = TRUE;
+
+  $form['theme'] = array(
+    '#type' => 'select',
+    '#title' => 'Шаблон',
+    '#options' => sl7_social_button_get_theme_name(),
+    '#default_value' => variable_get('sl7_social_button_theme', 'sl7_default_square'),
+    '#ajax' => array(
+      'event' => 'change',
+      'wrapper' => 'theme-preview',
+      'callback' => 'sl7_social_button_theme_preview_ajax_callback',
+      'method' => 'replace',
+      'progress' => array('type' => 'none'),
+    ),
+  );
+  $form['theme_wrapper'] = array(
+    '#prefix' => '<div id="theme-preview">',
+    '#suffix' => '</div>',
+  );
+  $form['theme_wrapper']['theme_preview'] = array(
+    '#markup' => '<img src="/' . $theme_info['img'] . '" />',
+  );
+  if ($theme_info['settings']) {
+    $form['theme_wrapper']['settings'] = call_user_func_array($theme_info['settings'], array(variable_get('sl7_social_button_theme_settings')));
+  }
+
+  $form['url'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Адреса',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['url']['vk'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Вконтакте',
+    '#default_value' => isset($conf['vk']) ? $conf['vk'] : '',
+  );
+  $form['url']['fb'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Facebook',
+    '#default_value' => isset($conf['fb']) ? $conf['fb'] : '',
+  );
+  $form['url']['yt'] = array(
+    '#type' => 'textfield',
+    '#title' => 'YouTube',
+    '#default_value' => isset($conf['yt']) ? $conf['yt'] : '',
+  );
+  $form['url']['tw'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Twitter',
+    '#default_value' => isset($conf['tw']) ? $conf['tw'] : '',
+  );
+  $form['url']['gl'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Google+',
+    '#default_value' => isset($conf['gl']) ? $conf['gl'] : '',
+  );
+  $form['url']['ok'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Одноклассники',
+    '#default_value' => isset($conf['ok']) ? $conf['ok'] : '',
+  );
+  $form['url']['in'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Instagram',
+    '#default_value' => isset($conf['in']) ? $conf['in'] : '',
+  );
+  $form['url']['mm'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Мой Мир@Mail.ru',
+    '#default_value' => isset($conf['mm']) ? $conf['mm'] : '',
+  );
+  $form['url']['lj'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Живой Журнал',
+    '#default_value' => isset($conf['lj']) ? $conf['lj'] : '',
+  );
+  $form['url']['t'] = array(
+    '#type' => 'textfield',
+    '#title' => 'tumblr',
+    '#default_value' => isset($conf['t']) ? $conf['t'] : '',
+  );
+  $form['url']['gh'] = array(
+    '#type' => 'textfield',
+    '#title' => 'GitHub',
+    '#default_value' => isset($conf['gh']) ? $conf['gh'] : '',
+  );
+  $form['url']['lin'] = array(
+    '#type' => 'textfield',
+    '#title' => 'LinkedIn',
+    '#default_value' => isset($conf['lin']) ? $conf['lin'] : '',
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Сохранить',
+    '#weight' => 999,
+  );
+
+  return $form;
+}
+
+function sl7_social_button_settings_form_validate($form, &$form_state) {
+  foreach ($form_state['values']['url'] as $name => $value) {
+    if ($value && !valid_url($value, TRUE)) {
+      form_set_error('url][' . $name, "Неверный адрес для {$form['url'][$name]['#title']}.");
+    }
+  }
+}
+
+function sl7_social_button_settings_form_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
+  $conf = array();
+
+  foreach ($form_state['values']['url'] as $key => $value) {
+    if (!empty($value)) {
+      if (is_array($value) && isset($form_state['values']['array_filter'])) {
+        $value = array_keys(array_filter($value));
+      }
+      $conf[$key] = $value;
+    }
+  }
+
+  if ($form_state['values']['theme_wrapper']['settings']) {
+    variable_set('sl7_social_button_theme_settings', $form_state['values']['theme_wrapper']['settings']);
+  }
+  variable_set('sl7_social_button_theme', $form_state['values']['theme']);
+  variable_set('sl7_social_button_url', $conf);
+  drupal_set_message(t('The configuration options have been saved.'));
+}
+
+function sl7_social_button_theme_preview_ajax_callback($form, &$form_state) {
+  return $form['theme_wrapper'];
+}
