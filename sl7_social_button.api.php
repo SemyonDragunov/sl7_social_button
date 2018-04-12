@@ -10,7 +10,7 @@
  * settings - Не обязательно. Форма с настройками. По Form API, но единственный аргумент $default_value,
  * в нём передаются параметры по умолчанию.
  * @see sl7_social_button_theme_sl7_default_settings().
- * img - Ихображение для превью.
+ * img - Изображение для превью.
  */
 function hook_sl7_social_button_theme() {
 	
