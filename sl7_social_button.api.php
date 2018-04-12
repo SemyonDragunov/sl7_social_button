@@ -3,6 +3,8 @@
 /**
  * Implements hook_sl7_social_button_theme().
  * 
+ * Инициирование типа дизайна иконок.
+ * 
  * title - Название.
  * theme - Шаблон описанный в hook_theme.
  * settings - Не обязательно. Форма с настройками. По Form API, но единственный аргумент $default_value,
