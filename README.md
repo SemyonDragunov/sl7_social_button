@@ -21,7 +21,7 @@
 Требуемые модули от SL7:
 * [sl7_control_panel](https://github.com/SemyonDragunov/sl7_control_panel)
 
-Для Drupal 7. PHP =< 5.4
+Для Drupal 7. PHP >= 5.4 & 7.
 
 Автор: Семён Драгунов [sam.dragunov@gmail.com](sam.dragunov@gmail.com)
 
@@ -53,7 +53,7 @@ Button-links to groups and accounts on social networks.
 Required modules from SL7:
 * [sl7_control_panel](https://github.com/SemyonDragunov/sl7_control_panel)
 
-For Drupal 7. PHP =< 5.4
+For Drupal 7. PHP >= 5.4 & 7.
 
 Author: Semyon Dragunov [sam.dragunov@gmail.com](sam.dragunov@gmail.com)
 
